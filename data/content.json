@@ -1,0 +1,39 @@
+{
+    "general": {
+        "businessName": "Nailsure",
+        "phone": "+1 (555) 123-4567",
+        "email": "hello@nailsure.com",
+        "address": "123 Luxury Lane, Beverly Hills, CA",
+        "instagram": "https://instagram.com",
+        "facebook": "https://facebook.com"
+    },
+    "home": {
+        "heroTitle": "Elevate Your Style",
+        "heroSubtitle": "Experience the art of luxury nail care in the comfort of your home or our studio.",
+        "aboutTeaserTitle": "The Artist",
+        "aboutTeaserText": "With over 10 years of experience, I bring a touch of elegance and precision to every appointment. My mission is to make you feel confident and beautiful."
+    },
+    "services": [
+        {
+            "id": "1",
+            "name": "Luxury Manicure",
+            "price": 65,
+            "duration": 60,
+            "description": "Complete nail care with premium polish and hand massage."
+        },
+        {
+            "id": "2",
+            "name": "Gel Pedicure",
+            "price": 85,
+            "duration": 75,
+            "description": "Long-lasting gel polish with exfoliating scrub and massage."
+        },
+        {
+            "id": "3",
+            "name": "Nail Art (Add-on)",
+            "price": 20,
+            "duration": 30,
+            "description": "Custom designs to match your style."
+        }
+    ]
+}
