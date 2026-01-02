@@ -6,21 +6,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { GlassCard, GlassCardContent } from "@/components/ui/glass-card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { User, Scissors, MapPin, Calendar, Check, ChevronRight, ChevronLeft, Home, Building2 } from "lucide-react";
 
-// Schema for Step 1: User Info
+// Schemas
 const userInfoSchema = z.object({
     name: z.string().min(2, "Name is required"),
     email: z.string().email("Invalid email"),
     phone: z.string().min(10, "Valid phone number is required"),
 });
 
-// Schema for Step 2: Service Selection
 const serviceSchema = z.object({
     serviceId: z.string().min(1, "Please select a service"),
 });
@@ -39,6 +39,13 @@ interface BookingData {
     timeSlot?: string;
     date?: string;
 }
+
+const steps = [
+    { id: 1, title: "Your Info", icon: User },
+    { id: 2, title: "Service", icon: Scissors },
+    { id: 3, title: "Location", icon: MapPin },
+    { id: 4, title: "Schedule", icon: Calendar },
+];
 
 export function BookingWizard({ services }: BookingWizardProps) {
     const [step, setStep] = useState(1);
@@ -68,82 +75,149 @@ export function BookingWizard({ services }: BookingWizardProps) {
         setStep((prev) => Math.max(1, prev - 1));
     };
 
+    const slideVariants = {
+        enter: (direction: number) => ({
+            x: direction > 0 ? 50 : -50,
+            opacity: 0,
+        }),
+        center: {
+            x: 0,
+            opacity: 1,
+        },
+        exit: (direction: number) => ({
+            x: direction < 0 ? 50 : -50,
+            opacity: 0,
+        }),
+    };
+
     return (
         <div className="max-w-2xl mx-auto">
             {/* Progress Indicator */}
-            <div className="flex justify-between mb-8 relative">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted -z-10" />
-                {[1, 2, 3, 4].map((s) => (
-                    <div
-                        key={s}
-                        className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors bg-background border-2",
-                            step >= s
-                                ? "border-primary text-primary"
-                                : "border-muted text-muted-foreground"
-                        )}
-                    >
-                        {s}
+            <div className="flex items-center justify-between mb-10 relative">
+                {/* Progress line background */}
+                <div className="absolute top-6 left-0 right-0 h-0.5 bg-muted" />
+                {/* Progress line fill */}
+                <motion.div
+                    className="absolute top-6 left-0 h-0.5 bg-primary"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                />
+
+                {steps.map((s, index) => (
+                    <div key={s.id} className="relative z-10 flex flex-col items-center">
+                        <motion.div
+                            className={cn(
+                                "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500",
+                                step > s.id
+                                    ? "bg-primary text-primary-foreground"
+                                    : step === s.id
+                                        ? "bg-primary text-primary-foreground shadow-[0_0_20px_rgba(186,147,132,0.5)]"
+                                        : "bg-muted text-muted-foreground"
+                            )}
+                            initial={false}
+                            animate={{
+                                scale: step === s.id ? 1.1 : 1,
+                            }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                            {step > s.id ? (
+                                <Check className="w-5 h-5" />
+                            ) : (
+                                <s.icon className="w-5 h-5" />
+                            )}
+                        </motion.div>
+                        <span
+                            className={cn(
+                                "mt-2 text-xs font-medium transition-colors duration-300 hidden sm:block",
+                                step >= s.id ? "text-primary" : "text-muted-foreground"
+                            )}
+                        >
+                            {s.title}
+                        </span>
                     </div>
                 ))}
             </div>
 
-            <AnimatePresence mode="wait">
+            {/* Step Content */}
+            <AnimatePresence mode="wait" custom={step}>
                 {step === 1 && (
                     <motion.div
                         key="step1"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        custom={1}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Your Information</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <form id="step1-form" onSubmit={userInfoForm.handleSubmit(onUserInfoSubmit)} className="space-y-4">
+                        <GlassCard>
+                            <GlassCardContent className="p-8">
+                                <h2 className="text-2xl font-serif font-bold mb-6">Your Information</h2>
+                                <form id="step1-form" onSubmit={userInfoForm.handleSubmit(onUserInfoSubmit)} className="space-y-5">
                                     <div className="space-y-2">
                                         <Label htmlFor="name">Full Name</Label>
-                                        <Input id="name" {...userInfoForm.register("name")} />
+                                        <Input
+                                            id="name"
+                                            {...userInfoForm.register("name")}
+                                            className="h-12 rounded-xl border-border/50 bg-background/50 focus:border-primary/50 transition-all duration-300"
+                                            placeholder="Jane Doe"
+                                        />
                                         {userInfoForm.formState.errors.name && (
                                             <p className="text-sm text-destructive">{userInfoForm.formState.errors.name.message}</p>
                                         )}
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="email">Email</Label>
-                                        <Input id="email" type="email" {...userInfoForm.register("email")} />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            {...userInfoForm.register("email")}
+                                            className="h-12 rounded-xl border-border/50 bg-background/50 focus:border-primary/50 transition-all duration-300"
+                                            placeholder="jane@example.com"
+                                        />
                                         {userInfoForm.formState.errors.email && (
                                             <p className="text-sm text-destructive">{userInfoForm.formState.errors.email.message}</p>
                                         )}
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="phone">Phone Number</Label>
-                                        <Input id="phone" type="tel" {...userInfoForm.register("phone")} />
+                                        <Input
+                                            id="phone"
+                                            type="tel"
+                                            {...userInfoForm.register("phone")}
+                                            className="h-12 rounded-xl border-border/50 bg-background/50 focus:border-primary/50 transition-all duration-300"
+                                            placeholder="(555) 123-4567"
+                                        />
                                         {userInfoForm.formState.errors.phone && (
                                             <p className="text-sm text-destructive">{userInfoForm.formState.errors.phone.message}</p>
                                         )}
                                     </div>
                                 </form>
-                            </CardContent>
-                            <CardFooter className="flex justify-end">
-                                <Button type="submit" form="step1-form">Next: Select Service</Button>
-                            </CardFooter>
-                        </Card>
+                                <div className="flex justify-end mt-8">
+                                    <Button type="submit" form="step1-form" className="rounded-full px-8">
+                                        Next: Select Service
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </GlassCardContent>
+                        </GlassCard>
                     </motion.div>
                 )}
 
                 {step === 2 && (
                     <motion.div
                         key="step2"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        custom={1}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Select Service</CardTitle>
-                            </CardHeader>
-                            <CardContent>
+                        <GlassCard>
+                            <GlassCardContent className="p-8">
+                                <h2 className="text-2xl font-serif font-bold mb-6">Select Your Service</h2>
                                 <form id="step2-form" onSubmit={serviceForm.handleSubmit(onServiceSubmit)}>
                                     <RadioGroup
                                         onValueChange={(val) => serviceForm.setValue("serviceId", val)}
@@ -152,21 +226,21 @@ export function BookingWizard({ services }: BookingWizardProps) {
                                     >
                                         {services.map((service) => (
                                             <div key={service.id}>
-                                                <RadioGroupItem
-                                                    value={service.id}
-                                                    id={service.id}
-                                                    className="peer sr-only"
-                                                />
+                                                <RadioGroupItem value={service.id} id={service.id} className="peer sr-only" />
                                                 <Label
                                                     htmlFor={service.id}
-                                                    className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                                    className={cn(
+                                                        "flex flex-col rounded-xl border-2 border-muted p-5 cursor-pointer transition-all duration-300",
+                                                        "hover:border-primary/30 hover:bg-primary/5",
+                                                        "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                                                    )}
                                                 >
                                                     <div className="flex w-full justify-between items-center mb-2">
                                                         <span className="font-semibold text-lg">{service.name}</span>
-                                                        <span className="font-bold text-primary">${service.price}</span>
+                                                        <span className="font-bold text-primary text-lg">${service.price}</span>
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
-                                                    <span className="text-xs font-medium bg-secondary px-2 py-1 rounded">
+                                                    <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
+                                                    <span className="text-xs font-medium bg-secondary/50 px-3 py-1 rounded-full w-fit">
                                                         {service.duration} mins
                                                     </span>
                                                 </Label>
@@ -177,27 +251,34 @@ export function BookingWizard({ services }: BookingWizardProps) {
                                         <p className="text-sm text-destructive mt-2">{serviceForm.formState.errors.serviceId.message}</p>
                                     )}
                                 </form>
-                            </CardContent>
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={goBack}>Back</Button>
-                                <Button type="submit" form="step2-form">Next: Location</Button>
-                            </CardFooter>
-                        </Card>
+                                <div className="flex justify-between mt-8">
+                                    <Button variant="outline" onClick={goBack} className="rounded-full px-6">
+                                        <ChevronLeft className="w-4 h-4 mr-2" />
+                                        Back
+                                    </Button>
+                                    <Button type="submit" form="step2-form" className="rounded-full px-8">
+                                        Next: Location
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </GlassCardContent>
+                        </GlassCard>
                     </motion.div>
                 )}
 
                 {step === 3 && (
                     <motion.div
                         key="step3"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        custom={1}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Choose Location</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
+                        <GlassCard>
+                            <GlassCardContent className="p-8">
+                                <h2 className="text-2xl font-serif font-bold mb-6">Choose Location</h2>
                                 <RadioGroup
                                     defaultValue={formData.locationType || "studio"}
                                     onValueChange={(val) => setFormData((prev) => ({ ...prev, locationType: val }))}
@@ -207,114 +288,159 @@ export function BookingWizard({ services }: BookingWizardProps) {
                                         <RadioGroupItem value="studio" id="studio" className="peer sr-only" />
                                         <Label
                                             htmlFor="studio"
-                                            className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-32"
+                                            className={cn(
+                                                "flex flex-col items-center justify-center rounded-xl border-2 border-muted p-6 cursor-pointer transition-all duration-300 h-40",
+                                                "hover:border-primary/30 hover:bg-primary/5",
+                                                "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                                            )}
                                         >
-                                            <span className="font-semibold text-lg mb-2">In-Studio</span>
-                                            <span className="text-sm text-center text-muted-foreground">Visit our luxury salon in Beverly Hills</span>
+                                            <Building2 className="w-8 h-8 text-primary mb-3" />
+                                            <span className="font-semibold text-lg mb-1">In-Studio</span>
+                                            <span className="text-xs text-center text-muted-foreground">Visit our Beverly Hills salon</span>
                                         </Label>
                                     </div>
                                     <div>
                                         <RadioGroupItem value="mobile" id="mobile" className="peer sr-only" />
                                         <Label
                                             htmlFor="mobile"
-                                            className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-32"
+                                            className={cn(
+                                                "flex flex-col items-center justify-center rounded-xl border-2 border-muted p-6 cursor-pointer transition-all duration-300 h-40",
+                                                "hover:border-primary/30 hover:bg-primary/5",
+                                                "peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10"
+                                            )}
                                         >
-                                            <span className="font-semibold text-lg mb-2">Mobile Service</span>
-                                            <span className="text-sm text-center text-muted-foreground">We come to you (Travel fee applies)</span>
+                                            <Home className="w-8 h-8 text-primary mb-3" />
+                                            <span className="font-semibold text-lg mb-1">Mobile Service</span>
+                                            <span className="text-xs text-center text-muted-foreground">We come to you</span>
                                         </Label>
                                     </div>
                                 </RadioGroup>
 
                                 {formData.locationType === "mobile" && (
-                                    <div className="space-y-4 border-t pt-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="address">Your Address</Label>
-                                            <Input id="address" placeholder="123 Example St, Los Angeles, CA" />
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: "auto" }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mt-6 pt-6 border-t border-border/50"
+                                    >
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="address">Your Address</Label>
+                                                <Input
+                                                    id="address"
+                                                    placeholder="123 Example St, Los Angeles, CA"
+                                                    className="h-12 rounded-xl border-border/50 bg-background/50"
+                                                />
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="secondary"
+                                                className="w-full rounded-xl"
+                                                onClick={() => toast.info("Calculating distance... Travel fee: $25")}
+                                            >
+                                                Check Availability & Travel Fee
+                                            </Button>
                                         </div>
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            className="w-full"
-                                            onClick={() => toast.info("Calculating distance... (Mock: 5 miles)")}
-                                        >
-                                            Check Availability & Travel Fee
-                                        </Button>
-                                    </div>
+                                    </motion.div>
                                 )}
-                            </CardContent>
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={goBack}>Back</Button>
-                                <Button onClick={() => setStep(4)}>Next: Schedule</Button>
-                            </CardFooter>
-                        </Card>
+
+                                <div className="flex justify-between mt-8">
+                                    <Button variant="outline" onClick={goBack} className="rounded-full px-6">
+                                        <ChevronLeft className="w-4 h-4 mr-2" />
+                                        Back
+                                    </Button>
+                                    <Button onClick={() => setStep(4)} className="rounded-full px-8">
+                                        Next: Schedule
+                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                </div>
+                            </GlassCardContent>
+                        </GlassCard>
                     </motion.div>
                 )}
 
                 {step === 4 && (
                     <motion.div
                         key="step4"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        custom={1}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Select a Time</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label>Date</Label>
-                                    <Input
-                                        type="date"
-                                        className="w-full"
-                                        onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
-                                    />
-                                </div>
+                        <GlassCard>
+                            <GlassCardContent className="p-8">
+                                <h2 className="text-2xl font-serif font-bold mb-6">Select Date & Time</h2>
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Label>Date</Label>
+                                        <Input
+                                            type="date"
+                                            className="h-12 rounded-xl border-border/50 bg-background/50"
+                                            onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                                        />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label>Available Slots</Label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {["10:00 AM", "11:30 AM", "2:00 PM", "3:30 PM"].map((slot) => (
-                                            <Button
-                                                key={slot}
-                                                variant={formData.timeSlot === slot ? "default" : "outline"}
-                                                className="w-full"
-                                                onClick={() => {
-                                                    setFormData((prev) => ({ ...prev, timeSlot: slot }));
-                                                    toast.success(`Selected ${slot}`);
-                                                }}
-                                            >
-                                                {slot}
-                                            </Button>
-                                        ))}
+                                    <div className="space-y-3">
+                                        <Label>Available Time Slots</Label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {["10:00 AM", "11:30 AM", "2:00 PM", "3:30 PM", "4:00 PM", "5:30 PM"].map((slot) => (
+                                                <motion.button
+                                                    key={slot}
+                                                    type="button"
+                                                    whileHover={{ scale: 1.03 }}
+                                                    whileTap={{ scale: 0.97 }}
+                                                    className={cn(
+                                                        "py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all duration-300",
+                                                        formData.timeSlot === slot
+                                                            ? "border-primary bg-primary text-primary-foreground"
+                                                            : "border-muted hover:border-primary/30 hover:bg-primary/5"
+                                                    )}
+                                                    onClick={() => {
+                                                        setFormData((prev) => ({ ...prev, timeSlot: slot }));
+                                                        toast.success(`Selected ${slot}`);
+                                                    }}
+                                                >
+                                                    {slot}
+                                                </motion.button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={goBack}>Back</Button>
-                                <Button
-                                    onClick={async () => {
-                                        try {
-                                            const res = await fetch("/api/booking", {
-                                                method: "POST",
-                                                headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify(formData),
-                                            });
 
-                                            if (!res.ok) throw new Error("Booking failed");
+                                <div className="flex justify-between mt-8">
+                                    <Button variant="outline" onClick={goBack} className="rounded-full px-6">
+                                        <ChevronLeft className="w-4 h-4 mr-2" />
+                                        Back
+                                    </Button>
+                                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                                        <Button
+                                            className="rounded-full px-8 bg-primary hover:shadow-[0_8px_30px_rgba(186,147,132,0.5)] transition-all duration-300"
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await fetch("/api/booking", {
+                                                        method: "POST",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify(formData),
+                                                    });
 
-                                            toast.success("Booking Confirmed! Check your email.");
-                                            // Optional: Redirect to a success page or reset form
-                                        } catch (error) {
-                                            toast.error("Failed to confirm booking. Please try again.");
-                                        }
-                                    }}
-                                    disabled={!formData.timeSlot || !formData.date}
-                                >
-                                    Confirm Booking
-                                </Button>
-                            </CardFooter>
-                        </Card>
+                                                    if (!res.ok) throw new Error("Booking failed");
+
+                                                    toast.success("Booking Confirmed! Check your email for details.");
+                                                } catch {
+                                                    toast.error("Failed to confirm booking. Please try again.");
+                                                }
+                                            }}
+                                            disabled={!formData.timeSlot || !formData.date}
+                                        >
+                                            <Check className="w-4 h-4 mr-2" />
+                                            Confirm Booking
+                                        </Button>
+                                    </motion.div>
+                                </div>
+                            </GlassCardContent>
+                        </GlassCard>
                     </motion.div>
                 )}
             </AnimatePresence>
