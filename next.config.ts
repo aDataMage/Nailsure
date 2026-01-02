@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Disable Turbopack due to known panic bug
-  experimental: {
-    turbo: undefined,
-  },
   images: {
     remotePatterns: [
       {
